@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lumia Graph-RAG Core PRD</title>
+  <style>
+    :root { --paper:#f6f1e8; --ink:#17211f; --muted:#667773; --panel:#fffdf8; --line:#eadfce; --teal:#0f766e; --dark:#134e4a; --amber:#b36a14; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Noto Sans SC","Microsoft YaHei UI",system-ui,sans-serif; color:var(--ink); background:radial-gradient(circle at 8% 5%,rgba(15,118,110,.13),transparent 26%),radial-gradient(circle at 90% 8%,rgba(179,106,20,.12),transparent 24%),var(--paper); line-height:1.8; }
+    main { width:min(1120px,calc(100% - 36px)); margin:0 auto; padding:40px 0 72px; }
+    header { padding:54px; border-radius:34px; color:white; background:linear-gradient(135deg,var(--teal),var(--dark)); box-shadow:0 30px 90px rgba(15,78,70,.24); }
+    .eyebrow { letter-spacing:.18em; text-transform:uppercase; color:rgba(255,255,255,.72); font-size:13px; }
+    h1 { margin:12px 0; font-size:clamp(38px,6vw,72px); line-height:1; letter-spacing:-.06em; }
+    h2 { margin:0 0 12px; font-size:28px; letter-spacing:-.04em; }
+    h3 { margin:0 0 8px; font-size:18px; }
+    section { margin-top:20px; padding:28px; border:1px solid var(--line); border-radius:26px; background:rgba(255,253,248,.9); box-shadow:0 18px 58px rgba(31,41,55,.07); }
+    .lead { max-width:820px; color:rgba(255,255,255,.84); font-size:18px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .card { padding:18px; border:1px solid var(--line); border-radius:20px; background:white; }
+    pre { overflow:auto; padding:18px; border-radius:18px; color:#dcfff7; background:#10211e; }
+    code { padding:2px 6px; border-radius:7px; background:#eef4f2; }
+    pre code { padding:0; background:transparent; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:var(--dark); background:#eef8f4; }
+    ul { padding-left:1.25rem; }
+    .tagline { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+    .tag { padding:7px 12px; border-radius:999px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); }
+    footer { margin-top:24px; color:var(--muted); text-align:center; }
+    @media (max-width:860px){ header{padding:32px 24px}.grid{grid-template-columns:1fr} main{width:min(100% - 24px,1120px)} }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">PRD / Technical Roadmap</div>
+    <h1>Lumia Graph-RAG Core</h1>
+    <p class="lead">将书籍知识图谱与信号图谱搜索统一到同一套 Graph-RAG 思路中：文本像书籍目录一样组织，信号像多尺度章节一样编码，再通过图谱召回、向量检索和局部精排实现精准、可解释、低算力的搜索。</p>
+    <div class="tagline">
+      <span class="tag">作者：张春</span>
+      <span class="tag">时间：2026-07-08</span>
+      <span class="tag">Harness 规格化备忘</span>
+      <span class="tag">Gradio 实验台方向</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>项目目标</h2>
+    <div class="grid">
+      <div class="card"><h3>书籍知识图谱</h3><p>面向一万本 Markdown 电子书，建立书、卷、章、段落、概念、引用关系，用于大规模精准 RAG。</p></div>
+      <div class="card"><h3>信号图谱搜索</h3><p>面向信号、频谱图和特征图，建立时间窗口、局部模式、频谱结构和相似关系，用于低算力相似匹配。</p></div>
+      <div class="card"><h3>Gradio Lab</h3><p>作为研发调参实验台，比较 BM25、向量、图谱过滤、局部卷积、DTW 与 rerank 效果。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>统一抽象</h2>
+    <table>
+      <thead><tr><th>书籍知识图谱</th><th>信号图谱</th></tr></thead>
+      <tbody>
+        <tr><td>书籍</td><td>完整信号 / 一次采集 / 一张特征图</td></tr>
+        <tr><td>章节目录</td><td>时间窗口 / 多尺度片段 / channel group</td></tr>
+        <tr><td>段落 chunk</td><td>局部信号片段 / patch</td></tr>
+        <tr><td>概念实体</td><td>峰值、突变、周期、频谱峰、纹理模式</td></tr>
+        <tr><td>引用关系</td><td>相似关系、共现关系、先后依赖</td></tr>
+        <tr><td>RAG rerank</td><td>局部卷积 / DTW / cross-correlation 精排</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>核心架构</h2>
+    <pre><code>Lumia Graph-RAG Core
+├── Book Graph-RAG
+│   ├── Raw Markdown Corpus
+│   ├── Book / Chapter / Chunk Parser
+│   ├── LLM Wiki Compiler
+│   ├── Entity & Relation Extractor
+│   ├── Hybrid Retriever
+│   ├── Reranker
+│   ├── Diversity Selector
+│   └── Citation Answer Builder
+│
+├── Signal Graph Search
+│   ├── Signal Preprocessor
+│   ├── Multi-scale Segmenter
+│   ├── Feature Extractor
+│   ├── Signal Encoder
+│   ├── Pattern Miner
+│   ├── Graph Store
+│   ├── Vector Store
+│   ├── Candidate Retriever
+│   └── Local Matcher
+│
+└── Gradio Lab
+    ├── Index Builder UI
+    ├── Retrieval Debugger
+    ├── Parameter Tuning
+    ├── Evaluation Dashboard
+    └── Export Report</code></pre>
+  </section>
+
+  <section>
+    <h2>检索流程</h2>
+    <div class="grid">
+      <div class="card"><h3>书籍检索</h3><p>Query → 实体链接 → Wiki 召回 → 书籍召回 → 章节召回 → chunk 混合召回 → rerank → 多书覆盖 → 引用回答。</p></div>
+      <div class="card"><h3>信号检索</h3><p>Query Signal → 预处理 → 分段 → 特征提取 → ANN 召回 → 图谱过滤 → 局部卷积 / DTW 精排。</p></div>
+      <div class="card"><h3>融合评分</h3><p>向量相似度、频谱相似度、局部匹配、图谱上下文和元数据共同决定最终排序。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>MVP 里程碑</h2>
+    <table>
+      <thead><tr><th>阶段</th><th>范围</th><th>验收指标</th></tr></thead>
+      <tbody>
+        <tr><td>MVP-1 书籍图谱</td><td>100 本 Markdown，章节切分，FTS + 向量召回</td><td>综述模式返回 15 本以上不同来源</td></tr>
+        <tr><td>MVP-2 信号图谱</td><td>1000 条信号，多尺度 segment，ANN + 局部精排</td><td>相比全库卷积耗时下降 70% 以上</td></tr>
+        <tr><td>MVP-3 Gradio Lab</td><td>调参、结果表、评估导出</td><td>可导出 Markdown / CSV 报告</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>建议目录结构</h2>
+    <pre><code>src/graph_rag/
+  schema.py
+  stores/
+  book/
+    markdown_loader.py
+    chapter_parser.py
+    entity_extractor.py
+    wiki_compiler.py
+    hybrid_retriever.py
+    reranker.py
+    diversity_selector.py
+    citation_builder.py
+  signal/
+    preprocess.py
+    segmenter.py
+    feature_extractors.py
+    encoder.py
+    pattern_miner.py
+    signal_graph_builder.py
+    retriever.py
+    matcher.py
+    evaluator.py
+  eval/
+src/gradio_lab/
+  app.py
+  book_rag_lab.py
+  signal_graph_lab.py</code></pre>
+  </section>
+
+  <section>
+    <h2>下一步</h2>
+    <ol>
+      <li>用 OpenSpec 建立正式 change。</li>
+      <li>先实现书籍图谱 MVP，再实现信号图谱 MVP。</li>
+      <li>使用 Gradio Lab 做参数调试、指标评估和可视化验证。</li>
+      <li>稳定后再接入 Lumia ScriptorRAG 正式 Vue / FastAPI 工作台。</li>
+    </ol>
+  </section>
+
+  <footer>作者：张春 · AI 整理生成 · 用于项目灵感备忘、PRD 立项和后续开发指南。</footer>
+</main>
+</body>
+</html>

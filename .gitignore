@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Logs / runtime
+*.log
+server.log
+server_err.log
+uploads/
+*.tmp
+*.bak
+
+# Frontend dependencies
+frontend/node_modules/
+
+# Large generated artifacts
+build/
+dist/
+*.spec
+*.exe
+*.msi
+*.zip
+*.baiduyun.p.downloading
+
+# Model/cache/data artifacts
+models/
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.pkl
+*.sqlite
+*.db
+rag_db/
+
+# Local secrets
+.env
+.gateway.env
+*.key
+config/*.secret.*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
