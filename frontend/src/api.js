@@ -2,9 +2,12 @@ import axios from "axios"
 
 const embeddedBase =
   window.__ZCLUM_OCR_BASE_URL__ ||
-  window.__ANZAIDX_OCR_BASE_URL__ ||
   window.__OCR_HARNESS_BASE_URL__ ||
+  window.__HOST_OCR_BASE_URL__ ||
+  window.__ANZAIDX_OCR_BASE_URL__ ||
   import.meta.env.VITE_ZCLUM_OCR_BASE ||
+  import.meta.env.VITE_OCR_HARNESS_BASE ||
+  import.meta.env.VITE_HOST_OCR_BASE ||
   import.meta.env.VITE_ANZAIDX_OCR_BASE ||
   import.meta.env.VITE_API_BASE ||
   "/api"
@@ -15,14 +18,23 @@ function readToken() {
   return (
     window.__ZCLUM_USER_TOKEN__ ||
     window.__ZCLUM_TOKEN__ ||
+    window.__OCR_HARNESS_USER_TOKEN__ ||
+    window.__OCR_HARNESS_TOKEN__ ||
+    window.__HOST_USER_TOKEN__ ||
     window.__ANZAIDX_USER_TOKEN__ ||
     window.__ANZAIDX_TOKEN__ ||
     localStorage.getItem("zclum_user_token") ||
     localStorage.getItem("zclum_token") ||
+    localStorage.getItem("ocr_harness_user_token") ||
+    localStorage.getItem("ocr_harness_token") ||
+    localStorage.getItem("host_user_token") ||
     localStorage.getItem("anzaidx_user_token") ||
     localStorage.getItem("anzaidx_token") ||
     sessionStorage.getItem("zclum_user_token") ||
     sessionStorage.getItem("zclum_token") ||
+    sessionStorage.getItem("ocr_harness_user_token") ||
+    sessionStorage.getItem("ocr_harness_token") ||
+    sessionStorage.getItem("host_user_token") ||
     sessionStorage.getItem("anzaidx_user_token") ||
     sessionStorage.getItem("anzaidx_token") ||
     ""

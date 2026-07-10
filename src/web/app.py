@@ -41,6 +41,14 @@ from ..orchestrator import DocumentAnalyzer, OCRPipeline
 logger = logging.getLogger(__name__)
 
 
+def _cors_origins() -> list[str]:
+    raw = os.environ.get("OCR_HARNESS_CORS_ALLOWED_ORIGINS", "").strip()
+    if not raw:
+        return ["*"]
+    origins = [item.strip() for item in raw.split(",") if item.strip()]
+    return origins or ["*"]
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     try:
@@ -56,7 +64,7 @@ app = FastAPI(title="ZCLUM Prism OCR", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
