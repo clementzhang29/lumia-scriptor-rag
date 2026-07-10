@@ -9,11 +9,11 @@ Open-source document intelligence agent for `PDF -> Markdown -> RAG`.
 
 Primary web integration target: [zclum.com](https://zclum.com)
 
+![ZCLUM Prism OCR UI](docs/assets/zclum-prism-ocr-home.png)
+
 ## Overview
 
 ZCLUM Prism OCR is built for teams and individuals who need a full document workflow, not just OCR output.
-
-Pipeline:
 
 ```text
 PDF / Scan / Book
@@ -47,6 +47,7 @@ It works as:
 ## Features
 
 - multi-engine OCR orchestration
+- single-file and batch OCR for multiple PDFs or folders
 - Markdown cleanup and formatting
 - quality scoring and fallback routing
 - mounted knowledge-source management
@@ -61,10 +62,28 @@ It works as:
 - `src/orchestrator` - routing and pipeline logic
 - `src/correctors` - OCR correction logic
 - `src/formatter` - Markdown cleanup
-- `src/rag` - local retrieval engine
+- `src/rag` - persistent local retrieval engine
 - `src/llm` - provider abstraction
 - `frontend` - Vue 3 web UI
 - `deploy/zclum` - agent manifest and gateway package
+
+## Usage
+
+### English
+
+1. Start the FastAPI backend.
+2. Open the web UI and upload one PDF, multiple PDFs, or an entire folder.
+3. Let the pipeline route OCR, score quality, and generate Markdown.
+4. Optionally clean the Markdown and rebuild the RAG index.
+5. Query the indexed corpus with source-aware references.
+
+### 中文
+
+1. 启动 FastAPI 后端服务。
+2. 打开网页工作台，上传单个 PDF、多个 PDF，或整个文件夹。
+3. 系统会自动路由 OCR、质量评分并生成 Markdown。
+4. 可继续做 Markdown 清洗，并重建 RAG 索引。
+5. 在文枢 RAG 中基于引用来源进行检索与问答。
 
 ## Quick Start
 
@@ -92,6 +111,22 @@ Open:
 http://127.0.0.1:5174/
 ```
 
+## API Highlights
+
+- `GET /api/health`
+- `GET /api/engines`
+- `POST /api/convert`
+- `POST /api/convert/batch`
+- `GET /api/status/{task_id}`
+- `GET /api/batch/{batch_id}`
+- `GET /api/result/{task_id}`
+- `GET /api/download/{task_id}`
+- `POST /api/format/markdown`
+- `GET /api/rag/status`
+- `POST /api/rag/query`
+- `GET /api/providers`
+- `POST /api/providers`
+
 ## Platform Integration
 
 The frontend supports runtime injection for embedded usage.
@@ -117,25 +152,13 @@ Recommended public gateway path:
 /api/agents/ocr-harness/*
 ```
 
-See:
+Integration docs:
 
-- [docs/zclum-platform-adapter.md](/C:/Users/35160/Documents/Codex/zclum-ocr-harness-agent/docs/zclum-platform-adapter.md:1)
-- [docs/zclum-online-launch.md](/C:/Users/35160/Documents/Codex/zclum-ocr-harness-agent/docs/zclum-online-launch.md:1)
-- [deploy/zclum/ocr-harness-agent.json](/C:/Users/35160/Documents/Codex/zclum-ocr-harness-agent/deploy/zclum/ocr-harness-agent.json:1)
-
-## API Highlights
-
-- `GET /api/health`
-- `GET /api/engines`
-- `POST /api/convert`
-- `GET /api/status/{task_id}`
-- `GET /api/result/{task_id}`
-- `GET /api/download/{task_id}`
-- `POST /api/format/markdown`
-- `GET /api/rag/status`
-- `POST /api/rag/query`
-- `GET /api/providers`
-- `POST /api/providers`
+- [zclum-agent-integration](docs/zclum-agent-integration.md)
+- [platform-batch-ocr-reuse](docs/platform-batch-ocr-reuse.md)
+- [zclum-platform-adapter](docs/zclum-platform-adapter.md)
+- [zclum-online-launch](docs/zclum-online-launch.md)
+- [ocr-harness-agent manifest](deploy/zclum/ocr-harness-agent.json)
 
 ## Open Source
 
@@ -154,4 +177,3 @@ Community files included:
 MIT License.
 
 Author: `Zhang Chun`
-

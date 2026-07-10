@@ -74,7 +74,17 @@ export default {
       onUploadProgress: (e) => onProgress && onProgress(Math.round((e.loaded / e.total) * 100)),
     })
   },
+  convertBatch: (files, strategy, preferredEngine, onProgress) => {
+    const form = new FormData()
+    files.forEach((file) => form.append("files", file, file.webkitRelativePath || file.name))
+    form.append("strategy", strategy)
+    form.append("preferred_engine", preferredEngine)
+    return api.post("/convert/batch", form, {
+      onUploadProgress: (e) => onProgress && onProgress(Math.round((e.loaded / e.total) * 100)),
+    })
+  },
   status: (id) => api.get(`/status/${id}`),
+  batch: (id) => api.get(`/batch/${id}`),
   result: (id) => api.get(`/result/${id}`),
   download: (id) => `${api.defaults.baseURL}/download/${id}`,
   client: api,

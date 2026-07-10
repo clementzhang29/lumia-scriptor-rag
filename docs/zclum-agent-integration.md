@@ -143,6 +143,121 @@ Gateway public route:
 POST /api/agents/ocr-harness/convert
 ```
 
+Common error responses:
+
+```json
+{
+  "detail": "Task not found"
+}
+```
+
+## Batch OCR for multiple files or folders
+
+This endpoint is the recommended integration target for both zclum and 来客有方 when the host UI supports:
+
+- multiple PDF selection
+- folder selection from the browser
+- drag-and-drop bulk upload
+
+### Request
+
+```http
+POST /api/convert/batch
+Content-Type: multipart/form-data
+```
+
+### Form fields
+
+```text
+files             required, one or more PDF files
+strategy          optional, default auto
+preferred_engine  optional, for example surya, mineru, docling
+```
+
+### Notes
+
+- the frontend may send plain filenames such as `book-a.pdf`
+- when the browser supports folder upload, each file can carry a relative path such as `books/classic/book-a.pdf`
+- the backend preserves the relative structure inside the batch staging directory
+
+### Response
+
+```json
+{
+  "batch_id": "uuid",
+  "task_ids": ["uuid-1", "uuid-2", "uuid-3"],
+  "count": 3,
+  "status": "queued"
+}
+```
+
+### Error responses
+
+If no file is uploaded:
+
+```json
+{
+  "detail": "No files uploaded"
+}
+```
+
+Suggested gateway public route:
+
+```http
+POST /api/agents/ocr-harness/convert/batch
+```
+
+## Batch status
+
+### Request
+
+```http
+GET /api/batch/{batch_id}
+```
+
+### Response shape
+
+```json
+{
+  "batch_id": "uuid",
+  "count": 3,
+  "counts": {
+    "queued": 1,
+    "analyzing": 0,
+    "converting": 1,
+    "completed": 1,
+    "failed": 0
+  },
+  "tasks": [
+    {
+      "id": "task-uuid",
+      "batch_id": "uuid",
+      "filename": "books/classic/book-a.pdf",
+      "stored_path": "C:/.../uploads/batches/uuid/books/classic/book-a.pdf",
+      "status": "queued",
+      "progress": 0,
+      "created_at": "2026-07-10T00:00:00"
+    }
+  ]
+}
+```
+
+### Error responses
+
+If the batch does not exist:
+
+```json
+{
+  "detail": "Batch not found"
+}
+```
+
+Suggested gateway public route:
+
+```http
+GET /api/agents/ocr-harness/batch/{batch_id}
+```
+
 ## Task status
 
 ### Request
@@ -179,6 +294,11 @@ Gateway public route:
 GET /api/agents/ocr-harness/status/{task_id}
 ```
 
+This route remains the canonical way to inspect each file inside a batch. Host platforms can:
+
+- show a batch overview through `GET /api/batch/{batch_id}`
+- drill into per-file progress through `GET /api/status/{task_id}`
+
 ## OCR result and quality score
 
 ### Request
@@ -209,6 +329,8 @@ GET /api/result/{task_id}
 ```
 
 If the task is not complete, the API returns `400`.
+
+If the task id is unknown, the API returns `404`.
 
 Gateway public route:
 
@@ -533,4 +655,3 @@ OCR_HARNESS_PUBLIC_NAME=OCR-Harness
 OCR_HARNESS_MAX_UPLOAD_MB=200
 OCR_HARNESS_TIMEOUT_SECONDS=600
 ```
-

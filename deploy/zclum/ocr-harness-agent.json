@@ -33,6 +33,8 @@
     { "id": "health", "method": "GET", "path": "/api/health", "gateway_path": "/api/agents/ocr-harness/health", "auth": "public", "description": "Health check." },
     { "id": "engines", "method": "GET", "path": "/api/engines", "gateway_path": "/api/agents/ocr-harness/engines", "auth": "user", "description": "List OCR engines and availability." },
     { "id": "convert_pdf", "method": "POST", "path": "/api/convert", "gateway_path": "/api/agents/ocr-harness/convert", "content_type": "multipart/form-data", "auth": "user", "description": "Upload PDF and start OCR conversion." },
+    { "id": "convert_batch", "method": "POST", "path": "/api/convert/batch", "gateway_path": "/api/agents/ocr-harness/convert/batch", "content_type": "multipart/form-data", "auth": "user", "description": "Upload multiple PDFs or a folder export and start batch OCR." },
+    { "id": "batch_status", "method": "GET", "path": "/api/batch/{batch_id}", "gateway_path": "/api/agents/ocr-harness/batch/{batch_id}", "auth": "user", "description": "Poll batch OCR status and per-file counts." },
     { "id": "task_status", "method": "GET", "path": "/api/status/{task_id}", "gateway_path": "/api/agents/ocr-harness/status/{task_id}", "auth": "user", "description": "Poll OCR task status." },
     { "id": "task_result", "method": "GET", "path": "/api/result/{task_id}", "gateway_path": "/api/agents/ocr-harness/result/{task_id}", "auth": "user", "description": "Get OCR result and quality score." },
     { "id": "download_markdown", "method": "GET", "path": "/api/download/{task_id}", "gateway_path": "/api/agents/ocr-harness/download/{task_id}", "auth": "user", "description": "Download Markdown output." },
@@ -44,7 +46,9 @@
   ],
   "frontend_cards": [
     { "id": "upload_pdf", "title": "Upload PDF", "description": "Start OCR to Markdown.", "route_id": "convert_pdf", "primary": true },
+    { "id": "batch_upload", "title": "Batch OCR", "description": "Upload multiple PDFs or a folder for queued OCR.", "route_id": "convert_batch", "primary": true },
     { "id": "markdown_result", "title": "Markdown Result", "description": "View extracted Markdown and download it.", "route_id": "task_result" },
+    { "id": "batch_progress", "title": "Batch Progress", "description": "Show batch-level counts and drill down to each file task.", "route_id": "batch_status" },
     { "id": "quality_score", "title": "Quality Score", "description": "Review OCR quality and engine routing.", "route_id": "task_result" },
     { "id": "rag_query", "title": "Knowledge Search", "description": "Ask questions against the indexed corpus.", "route_id": "rag_query" },
     { "id": "format_markdown", "title": "Format Markdown", "description": "Clean OCR Markdown before export or indexing.", "route_id": "format_markdown" },

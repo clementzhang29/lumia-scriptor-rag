@@ -14,6 +14,8 @@ import json
 import asyncio
 import logging
 import sys
+import re
+from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import datetime
 from typing import Any
@@ -38,7 +40,19 @@ from ..orchestrator import DocumentAnalyzer, OCRPipeline
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="ZCLUM Prism OCR", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    try:
+        yield
+    finally:
+        try:
+            rag_engine.close()
+        except Exception:
+            logger.exception("Failed to close RAG engine cleanly")
+
+
+app = FastAPI(title="ZCLUM Prism OCR", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -125,6 +139,11 @@ class ConvertRequest(BaseModel):
     strategy: str = "auto"
     preferred_engine: str = ""
 
+
+class BatchConvertRequest(BaseModel):
+    strategy: str = "auto"
+    preferred_engine: str = ""
+
 class MarkdownFormatRequest(BaseModel):
     markdown: str
     fix_headings: bool = True
@@ -192,6 +211,23 @@ def _merge_docs_from_dirs(cache_dirs: list[Path]) -> list[dict]:
             seen.add(key)
             docs.append(doc)
     return docs
+
+
+def _safe_upload_relative_path(filename: str, fallback_name: str) -> Path:
+    raw = filename or fallback_name
+    raw = raw.replace("\\", "/")
+    parts = []
+    for part in raw.split("/"):
+        part = part.strip()
+        if not part or part in {".", ".."}:
+            continue
+        cleaned = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff._ -]+", "_", part)
+        cleaned = cleaned.strip(" .")
+        if cleaned:
+            parts.append(cleaned)
+    if not parts:
+        parts = [fallback_name]
+    return Path(*parts)
 
 # === API Routes ===
 
@@ -352,12 +388,64 @@ async def convert_pdf(
     asyncio.create_task(_run_conversion(task_id, str(save_path), strategy, preferred_engine))
     return {"task_id": task_id, "status": "queued"}
 
+
+@app.post("/api/convert/batch")
+async def convert_pdf_batch(
+    files: list[UploadFile] = File(...),
+    strategy: str = Form("auto"),
+    preferred_engine: str = Form(""),
+):
+    """批量上传 PDF 或文件夹导出的多文件清单。"""
+    if not files:
+        raise HTTPException(400, "No files uploaded")
+    batch_id = str(uuid.uuid4())
+    batch_dir = UPLOAD_DIR / "batches" / batch_id
+    batch_dir.mkdir(parents=True, exist_ok=True)
+    batch_tasks = []
+    for item in files:
+        if not item.filename:
+            continue
+        task_id = str(uuid.uuid4())
+        relative_path = _safe_upload_relative_path(item.filename, f"{task_id}.pdf")
+        save_path = batch_dir / relative_path
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        content = await item.read()
+        save_path.write_bytes(content)
+        tasks[task_id] = {
+            "id": task_id,
+            "batch_id": batch_id,
+            "filename": item.filename,
+            "stored_path": str(save_path),
+            "status": "queued",
+            "progress": 0,
+            "created_at": datetime.now().isoformat(),
+        }
+        batch_tasks.append(task_id)
+        asyncio.create_task(_run_conversion(task_id, str(save_path), strategy, preferred_engine))
+    return {"batch_id": batch_id, "task_ids": batch_tasks, "count": len(batch_tasks), "status": "queued"}
+
 @app.get("/api/status/{task_id}")
 async def get_status(task_id: str):
     task = tasks.get(task_id)
     if not task:
         raise HTTPException(404, "Task not found")
     return task
+
+
+@app.get("/api/batch/{batch_id}")
+async def get_batch(batch_id: str):
+    batch_tasks = [task for task in tasks.values() if task.get("batch_id") == batch_id]
+    if not batch_tasks:
+        raise HTTPException(404, "Batch not found")
+    counts = {"queued": 0, "analyzing": 0, "converting": 0, "completed": 0, "failed": 0}
+    for task in batch_tasks:
+        counts[task.get("status", "queued")] = counts.get(task.get("status", "queued"), 0) + 1
+    return {
+        "batch_id": batch_id,
+        "count": len(batch_tasks),
+        "counts": counts,
+        "tasks": batch_tasks,
+    }
 
 @app.get("/api/result/{task_id}")
 async def get_result(task_id: str):
@@ -569,6 +657,7 @@ async def spa_fallback(full_path: str):
     if full_path.startswith("api/"):
         raise HTTPException(404, "API route not found")
     return await index()
+
 
 def run():
     import uvicorn
