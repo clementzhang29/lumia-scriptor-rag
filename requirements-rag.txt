@@ -1,0 +1,7 @@
+beautifulsoup4
+ebooklib
+jieba
+numpy
+pymupdf
+python-docx
+rank-bm25

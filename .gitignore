@@ -1,0 +1,16 @@
+﻿*.log
+*.tmp
+__pycache__/
+*.pyc
+.env
+node_modules/
+dist/
+.vite/
+.runtime/
+BaiduNetdiskDownload/
+garden-gpt-image-2/
+openspec/
+packaging/
+deploy/data/
+knowledge/
+*.zip

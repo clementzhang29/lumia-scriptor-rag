@@ -1,0 +1,22 @@
+services:
+  lumia-scriptor-rag:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumia-scriptor-rag
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      SCRIPTOR_RAG_HOST: 0.0.0.0
+      SCRIPTOR_RAG_PORT: 8080
+      SCRIPTOR_RAG_UPLOAD_DIR: /data/uploads
+      SCRIPTOR_RAG_DB_DIR: /data/rag_db
+      SCRIPTOR_RAG_KB_MOUNT_DIR: /data/kb_mounts
+      SCRIPTOR_RAG_PROVIDER_STORE: /data/providers/providers.json
+      CUDA_VISIBLE_DEVICES: "${CUDA_VISIBLE_DEVICES:-}"
+    volumes:
+      - ./deploy/data/uploads:/data/uploads
+      - ./deploy/data/rag_db:/data/rag_db
+      - ./deploy/data/kb_mounts:/data/kb_mounts
+      - ./deploy/data/providers:/data/providers

@@ -1,0 +1,220 @@
+{
+  "app_id": "ocr-harness",
+  "name": "OCR-Harness Document Agent",
+  "display_name": "OCR-Harness 文档智能体",
+  "description": "PDF OCR to Markdown, quality scoring, Markdown cleanup, provider-assisted correction, and RAG retrieval agent for zclum / 来客有方.",
+  "base_url_placeholder": "${OCR_HARNESS_BASE_URL}",
+  "not_configured_error": {
+    "status": 503,
+    "code": "ocr_harness_not_configured",
+    "message": "OCR-Harness base URL is not configured."
+  },
+  "required_env": [
+    {
+      "name": "OCR_HARNESS_BASE_URL",
+      "description": "FastAPI base URL, for example https://api.zclum.com/ocr-harness or http://127.0.0.1:8080",
+      "required": true
+    },
+    {
+      "name": "OCR_HARNESS_MAX_UPLOAD_MB",
+      "description": "Gateway upload limit in MB.",
+      "required": false,
+      "default": "200"
+    },
+    {
+      "name": "OCR_HARNESS_TIMEOUT_SECONDS",
+      "description": "Gateway timeout for OCR and RAG requests.",
+      "required": false,
+      "default": "600"
+    }
+  ],
+  "quota_hint": {
+    "max_upload_mb": 200,
+    "recommended_timeout_seconds": 600,
+    "public_demo_note": "For public demo traffic, limit large OCR jobs or route them to a private/GPU worker.",
+    "rate_limit_suggestion": "Start with 10 OCR jobs per user per day for public beta."
+  },
+  "routes": [
+    {
+      "id": "health",
+      "method": "GET",
+      "path": "/api/health",
+      "gateway_path": "/api/agents/ocr-harness/health",
+      "auth": "public",
+      "description": "Health check."
+    },
+    {
+      "id": "engines",
+      "method": "GET",
+      "path": "/api/engines",
+      "gateway_path": "/api/agents/ocr-harness/engines",
+      "auth": "user",
+      "description": "List OCR engines and availability."
+    },
+    {
+      "id": "convert_pdf",
+      "method": "POST",
+      "path": "/api/convert",
+      "gateway_path": "/api/agents/ocr-harness/convert",
+      "content_type": "multipart/form-data",
+      "auth": "user",
+      "description": "Upload PDF and start OCR conversion.",
+      "form_fields": ["file", "strategy", "preferred_engine"]
+    },
+    {
+      "id": "task_status",
+      "method": "GET",
+      "path": "/api/status/{task_id}",
+      "gateway_path": "/api/agents/ocr-harness/status/{task_id}",
+      "auth": "user",
+      "description": "Poll OCR task status."
+    },
+    {
+      "id": "task_result",
+      "method": "GET",
+      "path": "/api/result/{task_id}",
+      "gateway_path": "/api/agents/ocr-harness/result/{task_id}",
+      "auth": "user",
+      "description": "Get OCR result, Markdown, engine, corrections, and quality score."
+    },
+    {
+      "id": "download_markdown",
+      "method": "GET",
+      "path": "/api/download/{task_id}",
+      "gateway_path": "/api/agents/ocr-harness/download/{task_id}",
+      "auth": "user",
+      "description": "Download Markdown output."
+    },
+    {
+      "id": "format_markdown",
+      "method": "POST",
+      "path": "/api/format/markdown",
+      "gateway_path": "/api/agents/ocr-harness/format/markdown",
+      "content_type": "application/json",
+      "auth": "user",
+      "description": "Clean and refine Markdown."
+    },
+    {
+      "id": "rag_status",
+      "method": "GET",
+      "path": "/api/rag/status",
+      "gateway_path": "/api/agents/ocr-harness/rag/status",
+      "auth": "user",
+      "description": "Get RAG index status."
+    },
+    {
+      "id": "rag_rebuild",
+      "method": "POST",
+      "path": "/api/rag/rebuild",
+      "gateway_path": "/api/agents/ocr-harness/rag/rebuild",
+      "content_type": "application/json",
+      "auth": "admin",
+      "description": "Rebuild RAG index from server corpus directory."
+    },
+    {
+      "id": "rag_rebuild_mounted",
+      "method": "POST",
+      "path": "/api/rag/rebuild-mounted",
+      "gateway_path": "/api/agents/ocr-harness/rag/rebuild-mounted",
+      "content_type": "application/json",
+      "auth": "admin",
+      "description": "Sync mounted sources and rebuild RAG index."
+    },
+    {
+      "id": "rag_query",
+      "method": "POST",
+      "path": "/api/rag/query",
+      "gateway_path": "/api/agents/ocr-harness/rag/query",
+      "content_type": "application/json",
+      "auth": "user",
+      "description": "Ask RAG question and return answer with references."
+    },
+    {
+      "id": "providers_list",
+      "method": "GET",
+      "path": "/api/providers",
+      "gateway_path": "/api/agents/ocr-harness/providers",
+      "auth": "admin",
+      "description": "List configured LLM providers with sensitive URLs hidden."
+    },
+    {
+      "id": "providers_register",
+      "method": "POST",
+      "path": "/api/providers",
+      "gateway_path": "/api/agents/ocr-harness/providers",
+      "content_type": "application/json",
+      "auth": "admin",
+      "description": "Register an LLM provider."
+    },
+    {
+      "id": "providers_verify",
+      "method": "POST",
+      "path": "/api/providers/verify",
+      "gateway_path": "/api/agents/ocr-harness/providers/verify",
+      "auth": "admin",
+      "description": "Verify configured LLM providers."
+    },
+    {
+      "id": "kb_sources",
+      "method": "GET",
+      "path": "/api/kb-sources",
+      "gateway_path": "/api/agents/ocr-harness/kb-sources",
+      "auth": "admin",
+      "description": "List mounted knowledge sources."
+    }
+  ],
+  "frontend_cards": [
+    {
+      "id": "upload_pdf",
+      "title": "上传 PDF",
+      "description": "Upload a PDF and start OCR to Markdown.",
+      "route_id": "convert_pdf",
+      "primary": true
+    },
+    {
+      "id": "markdown_result",
+      "title": "Markdown 结果",
+      "description": "View extracted Markdown and download the result.",
+      "route_id": "task_result"
+    },
+    {
+      "id": "quality_score",
+      "title": "质量评分",
+      "description": "Show OCR quality score, engine used, and correction steps.",
+      "route_id": "task_result"
+    },
+    {
+      "id": "rag_query",
+      "title": "知识库检索",
+      "description": "Ask questions against the indexed corpus and show references.",
+      "route_id": "rag_query"
+    },
+    {
+      "id": "format_markdown",
+      "title": "字炉排版",
+      "description": "Clean OCR Markdown before export or RAG indexing.",
+      "route_id": "format_markdown"
+    },
+    {
+      "id": "export_result",
+      "title": "导出结果",
+      "description": "Download Markdown result for local archive or downstream workflows.",
+      "route_id": "download_markdown"
+    },
+    {
+      "id": "provider_settings",
+      "title": "模型设置",
+      "description": "Configure LLM provider for correction and RAG answering.",
+      "route_id": "providers_list",
+      "admin_only": true
+    }
+  ],
+  "gateway_proxy": {
+    "strip_prefix": "/api/agents/ocr-harness",
+    "add_prefix": "/api",
+    "stream_uploads": true,
+    "timeout_seconds": 600,
+    "max_upload_mb": 200,
+    "when_unconfigured": "return ocr_harness_not_configured"
+  }
+}
